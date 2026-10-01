@@ -32,6 +32,7 @@ export async function sendOrderConfirmation(
   if (!apiKey || !domain || !fromEmail)
     throw new Error("Mailgun is not configured.");
 
+  const reference = orderId.slice(0, 8).toUpperCase();
   const rows = items
     .map(
       (item) => `
@@ -50,7 +51,7 @@ export async function sendOrderConfirmation(
       <p style="color:#df623c;font-size:12px;font-weight:bold;letter-spacing:1px">BELMONT TECHNOLOGIES</p>
       <h1 style="font-family:Georgia,serif;font-weight:normal">Order received</h1>
       <p>Thank you. Your order <strong>${escapeHtml(
-        orderId
+        reference
       )}</strong> has been saved.</p>
       <table style="width:100%;border-collapse:collapse">${rows}</table>
       <p style="padding-top:12px;text-align:right"><strong>Total: ${formatPrice(
@@ -62,7 +63,7 @@ export async function sendOrderConfirmation(
   const form = new FormData();
   form.set("from", fromEmail);
   form.set("to", recipient);
-  form.set("subject", `Belmont order confirmation ${orderId.slice(0, 8)}`);
+  form.set("subject", `Belmont order confirmation ${reference}`);
   form.set("html", html);
 
   const response = await fetch(
