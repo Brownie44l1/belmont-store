@@ -2,8 +2,8 @@
 
 ## 1. Product
 
-**Shop:** Belmont Technologies — an online store selling software solutions and hardware parts
-**Customers:** Individuals and small businesses who need software tools or computer/electronics hardware parts
+**Shop:** Belmont Technologies — an online store selling software solutions and hardware parts.
+**Customers:** Individuals and small businesses who need software tools or computer/electronics hardware parts.
 **Goal:** A working online shop where a customer can sign in with Google, add products to a cart, check out, receive a confirmation email, and see their order history at any time.
 
 ## 2. Scope
