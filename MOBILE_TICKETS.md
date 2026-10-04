@@ -59,7 +59,7 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-030: Add durable cart schema and policies
 
-- **Status:** Not started
+- **Status:** Done (database migration still needs applying in Supabase)
 - **Depends on:** MOB-002
 - **Work:** Add migration/schema for user-owned cart items and `updated_at`; add owner-scoped RLS and enable the required Realtime publication.
 - **Acceptance:** Authenticated users can read only their own cart; schema is repeatable/documented; no anonymous or cross-user access.
@@ -67,7 +67,7 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-031: Support cookie and bearer identity in API routes
 
-- **Status:** Not started
+- **Status:** Done
 - **Depends on:** MOB-030
 - **Work:** Add a server-only request-user helper. Verify `Authorization: Bearer <access_token>` with Supabase Auth; preserve cookie-session behavior; update checkout to use the helper.
 - **Acceptance:** Existing web checkout remains supported; valid mobile access token works; invalid/missing token gets 401; server prices remain authoritative.
@@ -75,7 +75,7 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-032: Add authenticated cart API
 
-- **Status:** Not started
+- **Status:** Done (live database smoke test pending migration application)
 - **Depends on:** MOB-030, MOB-031
 - **Work:** Implement `GET /api/cart` and `PUT /api/cart` with strict product ID/quantity validation and verified-user scoping.
 - **Acceptance:** Reads/replaces only the caller's cart; malformed or excessive payloads return 400; anonymous requests return 401.
@@ -85,7 +85,7 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-040: Synchronize the web cart with the server
 
-- **Status:** Not started
+- **Status:** Done (Realtime notifications are MOB-041)
 - **Depends on:** MOB-032
 - **Work:** Extend the web CartProvider to hydrate/persist the server cart for signed-in users and retain local anonymous storage.
 - **Acceptance:** Existing anonymous shopping still works; sign-in merges local quantities into the user cart capped at 99; checkout uses the latest cart.
