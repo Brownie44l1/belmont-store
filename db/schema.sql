@@ -34,9 +34,18 @@ create table if not exists public.order_items (
 create index if not exists orders_user_created_idx on public.orders(user_id, created_at desc);
 create index if not exists order_items_order_idx on public.order_items(order_id);
 
+create table if not exists public.cart_items (
+	user_id uuid not null references auth.users(id) on delete cascade,
+	product_slug text not null references public.products(slug) on update cascade on delete cascade,
+	quantity integer not null check (quantity between 1 and 99),
+	updated_at timestamptz not null default now(),
+	primary key (user_id, product_slug)
+);
+
 alter table public.products enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
+alter table public.cart_items enable row level security;
 
 drop policy if exists "Products are readable by everyone" on public.products;
 create policy "Products are readable by everyone"
@@ -53,6 +62,74 @@ create policy "Customers can read their order items"
 		select 1 from public.orders
 		where orders.id = order_items.order_id and orders.user_id = auth.uid()
 	));
+
+drop policy if exists "Customers can read their cart" on public.cart_items;
+create policy "Customers can read their cart"
+	on public.cart_items for select to authenticated using (auth.uid() = user_id);
+
+create or replace function public.replace_cart(p_user_id uuid, p_items jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+	item_count integer;
+	valid_count integer;
+	matched_count integer;
+begin
+	if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) > 50 then
+		raise exception 'Invalid cart items';
+	end if;
+
+	item_count := jsonb_array_length(p_items);
+
+	select count(*) into valid_count
+	from jsonb_array_elements(p_items) as entries(item)
+	where item->>'productId' ~ '^[a-z0-9-]+$'
+		and (item->>'quantity') ~ '^[1-9][0-9]*$'
+		and (item->>'quantity')::integer <= 99;
+
+	if valid_count <> item_count then
+		raise exception 'Invalid cart item';
+	end if;
+
+	if (select count(distinct item->>'productId') from jsonb_array_elements(p_items) as entries(item)) <> item_count then
+		raise exception 'Duplicate cart product';
+	end if;
+
+	select count(*) into matched_count
+	from jsonb_array_elements(p_items) as entries(item)
+	join public.products product on product.slug = item->>'productId';
+
+	if matched_count <> item_count then
+		raise exception 'Unknown cart product';
+	end if;
+
+	delete from public.cart_items where user_id = p_user_id;
+
+	insert into public.cart_items (user_id, product_slug, quantity, updated_at)
+	select p_user_id, item->>'productId', (item->>'quantity')::integer, now()
+	from jsonb_array_elements(p_items) as entries(item);
+end;
+$$;
+
+revoke all on function public.replace_cart(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.replace_cart(uuid, jsonb) to service_role;
+
+do $$
+begin
+	if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+		and not exists (
+			select 1 from pg_publication_tables
+			where pubname = 'supabase_realtime'
+				and schemaname = 'public'
+				and tablename = 'cart_items'
+		) then
+		execute 'alter publication supabase_realtime add table public.cart_items';
+	end if;
+end;
+$$;
 
 create or replace function public.create_order(p_user_id uuid, p_email text, p_items jsonb)
 returns uuid
