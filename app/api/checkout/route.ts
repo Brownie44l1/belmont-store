@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/server/request-user";
 import { sendOrderConfirmation } from "@/lib/server/mailgun";
 
 type CheckoutItem = { productId: string; quantity: number };
@@ -55,12 +55,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user?.email) {
+    const user = await getRequestUser(request);
+    if (!user?.email) {
       return NextResponse.json(
         { error: "Sign in with Google before placing your order." },
         { status: 401 }
