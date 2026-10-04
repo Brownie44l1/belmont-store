@@ -24,6 +24,9 @@ The shop can be browsed with sample products before Supabase is configured. Goog
 - Server-verified checkout. Prices are read from Postgres, and the order plus item snapshots are written atomically.
 - “My Orders” history and post-checkout confirmation notice.
 - Mailgun HTML confirmation email attempted after saving an order; email failures are logged and do not erase the order.
+- Shared mobile delivery plan and ticket backlog in [MOBILE_PLAN.md](./MOBILE_PLAN.md) and [MOBILE_TICKETS.md](./MOBILE_TICKETS.md).
+- Authenticated cart persistence API (`GET/PUT /api/cart`) and database cart schema with owner-scoped RLS; checkout now accepts web cookie sessions or verified Supabase bearer tokens.
+- Web signed-in cart hydration/persistence with anonymous-cart merging and per-user local cart caches.
 
 ## Local Status (verified)
 
@@ -37,7 +40,11 @@ The app can be browsed now, but Google sign-in, saved orders, checkout, and emai
 
 ## Still Needed
 
-- Create/configure Supabase, Google OAuth, Mailgun, and Vercel accounts and enter their values in `.env.local` or deployment settings.
+- Retry Expo scaffold after npm registry access is restored. The scaffold command stalled before creating `mobile/`.
+- Apply the updated `db/schema.sql` in Supabase, then smoke-test authenticated cart read/write and native bearer checkout.
+- Implement Supabase Realtime subscriptions in web and mobile, plus focus/reconnect recovery.
+- Implement the mobile auth, catalog, cart, checkout, and order history tickets in [MOBILE_TICKETS.md](./MOBILE_TICKETS.md).
+- Configure Supabase, Google OAuth, and Vercel for the web app. Mailgun is already implemented but is exempt from the mobile lesson acceptance.
 - Run `db/schema.sql` in the Supabase SQL Editor.
 - Replace demo catalog names, images, and NGN prices with Belmont’s approved products and currency. Keep the SQL seed and `lib/products.ts` fallback catalog aligned.
 - Run the end-to-end flows once credentials are configured.
@@ -49,4 +56,4 @@ See `.env.example`. Server-only values (`SUPABASE_SERVICE_ROLE_KEY`, `MAILGUN_AP
 
 ## Exact Next Step
 
-Create a Supabase project, run `db/schema.sql` in its SQL Editor, then copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Continue with Google OAuth and Mailgun setup following steps 2–4 in the PRD’s Human-Only Setup section, then deploy to Vercel.
+Restore/check npm registry connectivity and rerun `npx create-expo-app@latest mobile --template blank-typescript` for ticket MOB-010. Separately, apply the updated `db/schema.sql` in Supabase so the completed cart API can be exercised against the real database. Mailgun is exempt for the mobile lesson and does not need setup for this work.

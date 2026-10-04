@@ -24,7 +24,7 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-010: Scaffold the Expo TypeScript app
 
-- **Status:** Not started
+- **Status:** Blocked: npm registry did not respond; no `mobile/` files were created
 - **Depends on:** MOB-002 decisions
 - **Work:** Create `mobile/` using Expo, TypeScript, and Expo Router; add app scripts, minimal navigation, `.env.example`, and setup notes.
 - **Acceptance:** `npm install` and Expo start work from `mobile/`; app opens on a simulator/device; root web install/build remain unaffected.
@@ -276,4 +276,5 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
-3. Start with MOB-030 through MOB-032: a server cart plus dual cookie/bearer auth is the enabling backend slice for both web and mobile.
+3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
+4. MOB-010 was attempted, but both `create-expo-app` and a direct npm registry check stalled. Retry MOB-010 when npm registry access is available; no partial mobile scaffold was retained.
