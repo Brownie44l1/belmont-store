@@ -24,6 +24,7 @@ server secrets such as the Supabase service-role key or Mailgun keys to `.env`.
 
 - `npm start` — start the Expo dev server
 - `npm run android` / `npm run ios` / `npm run web` — start on a specific target
+- `npm test` — run unit tests with Node's built-in test runner
 - `npm run lint` — run Expo lint
 - `npx tsc --noEmit` — typecheck
 
@@ -44,4 +45,6 @@ server secrets such as the Supabase service-role key or Mailgun keys to `.env`.
 ## Structure
 
 - `src/app/` — Expo Router screens and layouts (routes only)
+- `src/lib/` — API config and fetch client (`config.ts`, `http.ts`, `api.ts`, `types.ts`)
+- `src/lib/*.test.ts` — unit tests run by `npm test`
 - `app.json` — app config (name, slug, scheme, bundle identifiers, icons)

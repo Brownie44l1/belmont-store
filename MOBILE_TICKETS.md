@@ -33,11 +33,11 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-011: Add mobile configuration and API client
 
-- **Status:** Not started
+- **Status:** Done
 - **Depends on:** MOB-010
 - **Work:** Add typed API base URL/config validation and a fetch client that supports public requests and optional bearer tokens.
 - **Acceptance:** No hard-coded production/local host, no server secrets, and clear network/API errors.
-- **Validation:** Unit or focused tests for URL/config and response error handling.
+- **Validation:** `npm test` covers URL/config normalization and response error handling (12 tests, zero new dependencies via Node's built-in test runner); mobile typecheck and lint pass; Metro still bundles.
 
 ## Epic MOB-E2: Shared auth and catalog
 
@@ -139,4 +139,4 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
 3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
-4. MOB-010 is complete: the Expo app lives in `mobile/`, installs, typechecks, lints, bundles for Android via Metro, and `expo start` serves it. MOB-011 (config/API client) is next.
+4. MOB-010 and MOB-011 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, and `expo start` serves it. Next is MOB-020 (native Supabase auth).
