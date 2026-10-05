@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { CartProvider } from "@/components/cart-provider";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -12,6 +13,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Belmont Technologies",
   description: "Software solutions and hardware parts.",
+  icons: { apple: "/icons/apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#df623c",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -22,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <CartProvider>{children}</CartProvider>
+        <PwaRegister />
       </body>
     </html>
   );
