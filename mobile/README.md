@@ -64,3 +64,12 @@ Configuration → Redirect URLs**:
 - `belmont://auth-callback` — for development/standalone builds using the app scheme
 
 The Google provider needs no change; it keeps using the same web OAuth client.
+
+**If Google sign-in finishes but you stay in the browser on the web store**, Supabase rejected the mobile redirect and fell back to the Site URL, meaning the redirect URL is not allowlisted. The dev server logs the exact URL it asked for:
+
+```
+[auth] OAuth redirect URL: exp://<your-lan-ip>:<port>/--/auth-callback
+```
+
+Add `exp://**` (Expo Go) or that exact URL to the Redirect URLs list. `belmont://auth-callback` only applies to development/standalone builds, not Expo Go.
+
