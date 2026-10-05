@@ -1,93 +1,145 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { CategoryFilter } from "@/components/category-filter";
+import { ProductCard } from "@/components/product-card";
 import { useAuth } from "@/lib/auth";
+import type { CategoryFilter as CategoryFilterValue } from "@/lib/types";
+import { useProducts } from "@/lib/use-products";
 
 export default function HomeScreen() {
   const {
     configured,
     initializing,
     user,
-    error,
+    error: authError,
     clearError,
     signInWithGoogle,
     signOut,
   } = useAuth();
+  const { products, loading, refreshing, error, reload, refresh } =
+    useProducts();
+  const [category, setCategory] = useState<CategoryFilterValue>("all");
   const [busy, setBusy] = useState(false);
 
-  async function run(action: () => Promise<void>, title: string) {
+  const visibleProducts = useMemo(
+    () =>
+      products.filter(
+        (product) => category === "all" || product.category === category
+      ),
+    [products, category]
+  );
+
+  const onAuthPress = useCallback(async () => {
     setBusy(true);
     clearError();
     try {
-      await action();
+      if (user) {
+        await signOut();
+      } else {
+        await signInWithGoogle();
+      }
     } catch (cause) {
       Alert.alert(
-        title,
+        user ? "Sign-out problem" : "Sign-in problem",
         cause instanceof Error ? cause.message : "Something went wrong."
       );
     } finally {
       setBusy(false);
     }
-  }
+  }, [user, signInWithGoogle, signOut, clearError]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.content}>
-        <Text style={styles.brand}>Belmont Technologies</Text>
-        <Text style={styles.title}>Belmont Store</Text>
-        <Text style={styles.subtitle}>
-          Software solutions and hardware parts, on the go.
-        </Text>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <FlatList
+        data={visibleProducts}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <ProductCard product={item} />}
+        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor="#38bdf8"
+            colors={["#38bdf8"]}
+          />
+        }
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <View style={styles.topBar}>
+              <View style={styles.brandBlock}>
+                <Text style={styles.brand}>BELMONT TECHNOLOGIES</Text>
+                <Text style={styles.title}>Belmont Store</Text>
+              </View>
+              {configured ? (
+                <Pressable
+                  style={[styles.authButton, busy && styles.authButtonDisabled]}
+                  disabled={busy || initializing}
+                  onPress={onAuthPress}
+                >
+                  <Text style={styles.authButtonText}>
+                    {initializing ? "…" : user ? "Sign out" : "Sign in"}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
 
-        {error ? (
-          <Pressable style={styles.errorBanner} onPress={clearError}>
-            <Text style={styles.errorText}>{error}</Text>
-            <Text style={styles.errorHint}>Tap to dismiss</Text>
-          </Pressable>
-        ) : null}
-
-        <View style={styles.authArea}>
-          {!configured ? (
-            <Text style={styles.notice}>
-              Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in
-              mobile/.env to enable sign-in.
-            </Text>
-          ) : initializing ? (
-            <ActivityIndicator color="#38bdf8" />
-          ) : user ? (
-            <>
-              <Text style={styles.notice}>Signed in as {user.email}</Text>
-              <Pressable
-                style={[styles.button, styles.buttonSecondary]}
-                disabled={busy}
-                onPress={() => run(signOut, "Sign-out problem")}
-              >
-                <Text style={styles.buttonSecondaryText}>
-                  {busy ? "Signing out…" : "Sign out"}
-                </Text>
-              </Pressable>
-            </>
-          ) : (
-            <Pressable
-              style={[styles.button, busy && styles.buttonDisabled]}
-              disabled={busy}
-              onPress={() => run(signInWithGoogle, "Sign-in problem")}
-            >
-              <Text style={styles.buttonText}>
-                {busy ? "Opening Google…" : "Sign in with Google"}
+            {!configured ? (
+              <Text style={styles.account}>
+                Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in
+                mobile/.env to enable sign-in.
               </Text>
-            </Pressable>
-          )}
-        </View>
-      </View>
+            ) : user ? (
+              <Text style={styles.account}>Signed in as {user.email}</Text>
+            ) : null}
+
+            {authError ? (
+              <Pressable style={styles.errorBanner} onPress={clearError}>
+                <Text style={styles.errorText}>{authError}</Text>
+                <Text style={styles.errorHint}>Tap to dismiss</Text>
+              </Pressable>
+            ) : null}
+
+            <Text style={styles.subtitle}>
+              Software solutions and hardware parts, on the go.
+            </Text>
+
+            <CategoryFilter value={category} onChange={setCategory} />
+          </View>
+        }
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.stateArea}>
+              <ActivityIndicator color="#38bdf8" />
+              <Text style={styles.stateText}>Loading products…</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.stateArea}>
+              <Text style={styles.stateText}>{error}</Text>
+              <Pressable style={styles.retryButton} onPress={reload}>
+                <Text style={styles.retryText}>Try again</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.stateArea}>
+              <Text style={styles.stateText}>
+                No products in this category yet.
+              </Text>
+            </View>
+          )
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -97,70 +149,63 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0b1120",
   },
-  content: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
+  separator: {
+    height: 16,
+  },
+  header: {
+    paddingTop: 8,
+    paddingBottom: 16,
     gap: 12,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  brandBlock: {
+    flexShrink: 1,
   },
   brand: {
     color: "#38bdf8",
-    fontSize: 14,
-    fontWeight: "600",
-    letterSpacing: 1,
-    textTransform: "uppercase",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.2,
   },
   title: {
     color: "#f8fafc",
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "700",
-    textAlign: "center",
   },
   subtitle: {
     color: "#94a3b8",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  authArea: {
-    marginTop: 24,
-    alignItems: "center",
-    gap: 12,
-    alignSelf: "stretch",
-  },
-  notice: {
-    color: "#cbd5f5",
     fontSize: 15,
-    textAlign: "center",
   },
-  button: {
-    backgroundColor: "#38bdf8",
+  account: {
+    color: "#cbd5f5",
+    fontSize: 13,
+  },
+  authButton: {
+    backgroundColor: "#1e293b",
     borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignSelf: "stretch",
-    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
   },
-  buttonDisabled: {
+  authButtonDisabled: {
     opacity: 0.6,
   },
-  buttonText: {
-    color: "#0b1120",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  buttonSecondary: {
-    backgroundColor: "transparent",
-    borderColor: "#334155",
-    borderWidth: 1,
-  },
-  buttonSecondaryText: {
+  authButtonText: {
     color: "#e2e8f0",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
   errorBanner: {
-    alignSelf: "stretch",
     backgroundColor: "#7f1d1d",
     borderRadius: 10,
     padding: 12,
@@ -173,5 +218,27 @@ const styles = StyleSheet.create({
   errorHint: {
     color: "#fca5a5",
     fontSize: 12,
+  },
+  stateArea: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingVertical: 48,
+  },
+  stateText: {
+    color: "#94a3b8",
+    fontSize: 15,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#38bdf8",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  retryText: {
+    color: "#0b1120",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

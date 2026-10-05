@@ -1,5 +1,7 @@
 export type ProductCategory = "software" | "hardware";
 
+export type CategoryFilter = "all" | ProductCategory;
+
 export type Product = {
   id: string;
   name: string;

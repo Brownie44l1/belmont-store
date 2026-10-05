@@ -52,10 +52,11 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-021: Implement the mobile catalog
 
-- **Status:** Not started
+- **Status:** Done
 - **Depends on:** MOB-011
 - **Work:** Fetch `GET /api/products`; render loading/error/empty states and product/category browsing.
 - **Acceptance:** Product data and prices come from the existing API; mobile does not duplicate seed catalog data.
+- **Validation:** `useProducts` fetches from `fetchProducts`; home screen renders a product list with All/Software/Hardware filters, pull-to-refresh, and loading/error/empty states. Typecheck, lint, tests, and Metro bundle pass.
 
 ## Epic MOB-E3: Shared authenticated cart service
 
@@ -140,4 +141,4 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
 3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
-4. MOB-010, MOB-011, and MOB-020 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, and it has persistent Supabase Google auth with sign-in/sign-out. Next is MOB-021 (mobile catalog).
+4. MOB-010, MOB-011, MOB-020, and MOB-021 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, it has persistent Supabase Google auth, and it loads the live product catalog with category filtering. Next is MOB-041 (Realtime cart sync), then MOB-050 (mobile cart editing).
