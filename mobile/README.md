@@ -27,6 +27,20 @@ server secrets such as the Supabase service-role key or Mailgun keys to `.env`.
 - `npm run lint` — run Expo lint
 - `npx tsc --noEmit` — typecheck
 
+## Troubleshooting (Linux)
+
+- **`React Native DevTools` sandbox error on start.** Expo probes a bundled Electron app
+  (`chrome-sandbox` in `~/.cache/dotslash`) that is not setuid-root, so launching it can
+  print a `SUID sandbox helper binary` fatal error. It does not stop Metro. To avoid it,
+  start the dev server with the Chromium sandbox disabled:
+  ```bash
+  ELECTRON_DISABLE_SANDBOX=1 npx expo start
+  ```
+  (Alternatively, `sudo chown root:root <path>/chrome-sandbox && sudo chmod 4755
+  <path>/chrome-sandbox` fixes it properly.)
+- **Network commands hang.** This host blackholes IPv4 to the npm registry; prefix
+  install/CLI commands with `NODE_OPTIONS=--dns-result-order=ipv6first`.
+
 ## Structure
 
 - `src/app/` — Expo Router screens and layouts (routes only)

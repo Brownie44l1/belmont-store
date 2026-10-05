@@ -67,7 +67,7 @@ The native app lives in `mobile/` and shares the deployed API and Supabase proje
 cd mobile
 npm install
 cp .env.example .env   # fill in public values (never server secrets)
-npx expo start
+ELECTRON_DISABLE_SANDBOX=1 npx expo start
 ```
 
-Open the QR code with **Expo Go** on a phone connected to the same network, or press `w` for the web preview. On this host, the npm registry blackholes IPv4; prefix network commands with `NODE_OPTIONS=--dns-result-order=ipv6first` if installs or CLI calls hang. See `mobile/README.md` for details.
+Open the QR code with **Expo Go** on a phone connected to the same network, or press `w` for the web preview. `ELECTRON_DISABLE_SANDBOX=1` avoids a harmless Linux `chrome-sandbox` error from Expo's React Native DevTools probe. On this host, the npm registry blackholes IPv4; prefix network commands with `NODE_OPTIONS=--dns-result-order=ipv6first` if installs or CLI calls hang. The default dev port 8081 is already taken on this machine — let Expo pick 8082 (or pass `--port`). See `mobile/README.md` for details.
