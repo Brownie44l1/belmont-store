@@ -58,28 +58,29 @@ See `.env.example`. Server-only values (`SUPABASE_SERVICE_ROLE_KEY`, `MAILGUN_AP
 
 ## Exact Next Step
 
-Deploy the web app with the new PWA files (manifest, icons, service worker), then follow "Android APK from the web app (PWA / TWA)" below to produce an installable APK via PWABuilder. Install it, sign in with Google (this reuses the web flow, so it works), and verify the shared cart. The Expo native path (EAS) is documented in `mobile/README.md` and can be revisited if a React Native build is required. Then complete MOB-060 (cross-client acceptance) and MOB-061 (release handoff). Mailgun is exempt for the mobile lesson.
+Install `Belmont.apk` on the phone, sign in with Google, and verify the shared cart against the web app (see "Android APK from the web app (PWA / TWA)" below). Then complete MOB-060 (cross-client acceptance) and MOB-061 (release handoff). The Expo native path (EAS) is documented in `mobile/README.md` and can be revisited if a React Native build is explicitly required. Mailgun is exempt for the mobile lesson.
 
 ## Android APK from the web app (PWA / TWA)
 
 The fastest path to an installable APK is to package the deployed website as a **Trusted Web Activity (TWA)**. The TWA runs the site in Chrome, so the existing Google sign-in, cart, and order history all work, and there is no deep-link/native-OAuth problem. Trade-off: it is the website in an app shell, not native screens.
 
-The web app now ships the PWA pieces:
+The web app ships the PWA pieces:
 - `app/manifest.ts` → `/manifest.webmanifest` (standalone display, icons, theme color)
 - `public/icons/*` (192/512 + maskable + apple-touch)
 - `public/sw.js` registered in production by `components/pwa-register.tsx`
-- `public/.well-known/assetlinks.json` (placeholder; see step 3)
+- `public/.well-known/assetlinks.json` — TWA fingerprint (configured, verified)
 
-**Steps (human — uses the browser, no Android SDK needed):**
-1. Deploy the web app (push to `main` → Vercel, or `vercel --prod`) so the manifest, icons, `sw.js`, and `/.well-known/assetlinks.json` are live.
-2. Go to **https://www.pwabuilder.com**, enter `https://belmont-store.vercel.app`, and let it audit. Package for **Android**.
-   - Package ID: `com.belmont.store`
-   - App name: `Belmont`
-   - Let PWABuilder generate a signing key (or upload your own), then download the generated **APK**.
-3. PWABuilder shows the **SHA-256 signing fingerprint** and an `assetlinks.json` snippet. Replace the placeholder under `public/.well-known/assetlinks.json` with that content and redeploy — this makes the TWA full-screen (no browser bar).
-4. Install the APK on the phone (enable "install unknown apps"), open it, and sign in with Google.
+**Status: packaged.** The site is deployed, PWABuilder produced the Android package, and the signing fingerprint is live in `assetlinks.json` (Google's Digital Asset Links API confirms the association, so the TWA runs full-screen).
 
-Without step 3 the APK still installs and works, but shows a URL bar. An alternative to PWABuilder is Bubblewrap (`npx @bubblewrap/cli`), which needs a local JDK + Android SDK.
+**Artifacts** (all gitignored — never commit the keystore):
+- `Belmont - Google Play package.zip` — PWABuilder output
+- `Belmont.apk` — install on device / submission artifact
+- `Belmont.aab` — Play Store bundle
+- `signing.keystore` + `signing-key-info.txt` — **secrets; back these up**, losing them prevents shipping updates under the same package
+
+**To install/test:** enable "install unknown apps" on the phone, install `Belmont.apk`, open it, and sign in with Google (the web flow runs in Chrome, so it works and the shared cart appears).
+
+**To rebuild after code changes:** deploy the site, then re-run PWABuilder (or Bubblewrap, which needs a local JDK + Android SDK) and sign with the same keystore.
 
 ## Mobile App (Expo)
 
