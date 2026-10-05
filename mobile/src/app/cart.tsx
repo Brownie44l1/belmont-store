@@ -1,5 +1,6 @@
 import { Image } from "expo-image";
-import { useMemo } from "react";
+import { Link, useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { checkout } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import type { CartItem, Product } from "@/lib/types";
@@ -82,6 +85,9 @@ function CartRow({
 export default function CartScreen() {
   const { items, count, loading, error, setQuantity, remove, clear } = useCart();
   const { products } = useProducts();
+  const { user, session, signInWithGoogle } = useAuth();
+  const router = useRouter();
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const productMap = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -98,6 +104,34 @@ export default function CartScreen() {
       { text: "Cancel", style: "cancel" },
       { text: "Clear", style: "destructive", onPress: clear },
     ]);
+  }
+
+  async function handleCheckout() {
+    if (!user || !session) {
+      try {
+        await signInWithGoogle();
+      } catch (cause) {
+        Alert.alert(
+          "Sign-in problem",
+          cause instanceof Error ? cause.message : "Please try again."
+        );
+      }
+      return;
+    }
+
+    setCheckingOut(true);
+    try {
+      await checkout(items, session.access_token);
+      clear();
+      router.push("/orders");
+    } catch (cause) {
+      Alert.alert(
+        "Checkout failed",
+        cause instanceof Error ? cause.message : "Please try again."
+      );
+    } finally {
+      setCheckingOut(false);
+    }
   }
 
   return (
@@ -143,15 +177,46 @@ export default function CartScreen() {
                 <Text style={styles.totalValue}>{formatPrice(totalCents)}</Text>
               </View>
               <Text style={styles.footerNote}>
-                Sign in to save your basket and sync it across devices.
+                {user
+                  ? "Prices are confirmed on the server when you place the order."
+                  : "Sign in with Google to check out and sync your basket across devices."}
               </Text>
               <Pressable
                 accessibilityRole="button"
-                onPress={confirmClear}
-                style={styles.clearButton}
+                disabled={checkingOut}
+                onPress={handleCheckout}
+                style={[
+                  styles.checkoutButton,
+                  checkingOut && styles.buttonDisabled,
+                ]}
               >
-                <Text style={styles.clearText}>Clear basket</Text>
+                <Text style={styles.checkoutText}>
+                  {checkingOut
+                    ? "Placing order…"
+                    : user
+                    ? "Checkout"
+                    : "Sign in to check out"}
+                </Text>
               </Pressable>
+              <View style={styles.footerActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={confirmClear}
+                  style={styles.clearButton}
+                >
+                  <Text style={styles.clearText}>Clear basket</Text>
+                </Pressable>
+                {user ? (
+                  <Link href="/orders" asChild>
+                    <Pressable
+                      accessibilityRole="link"
+                      style={styles.ordersLink}
+                    >
+                      <Text style={styles.ordersLinkText}>My orders</Text>
+                    </Pressable>
+                  </Link>
+                ) : null}
+              </View>
             </View>
           ) : null
         }
@@ -283,7 +348,28 @@ const styles = StyleSheet.create({
     color: "#64748b",
     fontSize: 13,
   },
+  checkoutButton: {
+    backgroundColor: "#38bdf8",
+    borderRadius: 10,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  checkoutText: {
+    color: "#0b1120",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  footerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   clearButton: {
+    flex: 1,
     alignItems: "center",
     paddingVertical: 12,
     borderRadius: 10,
@@ -292,6 +378,19 @@ const styles = StyleSheet.create({
   },
   clearText: {
     color: "#f87171",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  ordersLink: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  ordersLinkText: {
+    color: "#e2e8f0",
     fontSize: 15,
     fontWeight: "600",
   },

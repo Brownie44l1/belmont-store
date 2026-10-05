@@ -115,11 +115,12 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-051: Implement mobile checkout and order history
 
-- **Status:** Not started
+- **Status:** Done
 - **Depends on:** MOB-020, MOB-031, MOB-050
 - **Work:** Send cart items to `POST /api/checkout` with the current bearer token; show confirmation and the shared user's order history.
 - **Acceptance:** Checkout rejects unauthenticated users; successful orders appear on web and mobile; client prices are never submitted as authoritative values.
-- **Validation:** Test order against configured Supabase project; email is not part of acceptance.
+- **Validation:** Cart screen checks out via `POST /api/checkout` with the bearer token (server re-prices; the client sends only product IDs and quantities), clears the cart, and routes to `/orders`. Order history reads the owner's `orders`/`order_items` through Supabase RLS, so web and mobile show the same records. Typecheck, lint, tests, bundle, and root lint/build pass.
+- **Note:** Live order placement against the configured Supabase project still needs the redirect allowlist and a device run; email is not part of the mobile acceptance.
 
 ## Epic MOB-E6: Quality and release
 
@@ -143,4 +144,4 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
 3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
-4. MOB-010, MOB-011, MOB-020, MOB-021, MOB-041, and MOB-050 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, it has persistent Supabase Google auth, the live product catalog, cross-client Realtime cart sync, and a full cart screen with anonymous local carts. Next is MOB-051 (mobile checkout and order history).
+4. MOB-010, MOB-011, MOB-020, MOB-021, MOB-041, MOB-050, and MOB-051 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, and it has persistent Supabase Google auth, the live product catalog, cross-client Realtime cart sync, full cart editing, bearer-auth checkout, and order history. Remaining: MOB-060 (cross-client acceptance and security checks) and MOB-061 (release handoff), plus the human redirect-allowlist step for live on-device sign-in.

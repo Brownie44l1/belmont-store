@@ -95,6 +95,13 @@ export default function HomeScreen() {
                     </Text>
                   </Pressable>
                 </Link>
+                {user ? (
+                  <Link href="/orders" asChild>
+                    <Pressable style={styles.cartButton}>
+                      <Text style={styles.cartButtonText}>Orders</Text>
+                    </Pressable>
+                  </Link>
+                ) : null}
                 {configured ? (
                   <Pressable
                     style={[styles.authButton, busy && styles.authButtonDisabled]}
@@ -187,6 +194,8 @@ const styles = StyleSheet.create({
   topActions: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
     gap: 8,
   },
   cartButton: {

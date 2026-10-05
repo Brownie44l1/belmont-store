@@ -33,6 +33,7 @@ The shop can be browsed with sample products before Supabase is configured. Goog
 - Mobile catalog: `useProducts` fetches the live `/api/products` feed; the home screen renders product cards with All/Software/Hardware filters, pull-to-refresh, and loading/error/empty states. NGN prices are formatted to match the web app.
 - Cross-client cart sync: web `CartProvider` and mobile `useCart` subscribe to the signed-in user's `cart_items` Realtime changes and refetch on events, reconnect (`SUBSCRIBED`), window focus/visibility/online (web), and AppState `active` (mobile); subscriptions are scoped by `user_id` and torn down on sign-out/unmount.
 - Mobile cart: app-wide `CartProvider` with add/quantity/remove/clear, a `/cart` screen with totals, anonymous carts persisted in AsyncStorage and merged into the server cart on sign-in (quantities capped at 99), and bearer-auth `PUT /api/cart` for signed-in edits.
+- Mobile checkout and orders: `/cart` checks out through `POST /api/checkout` with the bearer token (client sends only product IDs and quantities; the server re-prices), then routes to an `/orders` screen that reads the shared order history through Supabase RLS.
 
 ## Local Status (verified)
 
@@ -46,8 +47,8 @@ The app can be browsed now, but Google sign-in, saved orders, checkout, and emai
 
 ## Still Needed
 
-- Build the final mobile shopping step: checkout and order history (MOB-051).
-- Add `exp://**` and `belmont://auth-callback` to Supabase Auth → URL Configuration → Redirect URLs, then smoke-test live mobile Google sign-in, cart sync, and checkout.
+- Finish mobile quality/release: run the cross-client acceptance and security checks (MOB-060) and write the release handoff (MOB-061).
+- Add `exp://**` and `belmont://auth-callback` to Supabase Auth → URL Configuration → Redirect URLs, then smoke-test live mobile Google sign-in, cart sync, and checkout on a device.
 - Replace demo catalog names, images, and NGN prices with Belmont’s approved products and currency. Keep the SQL seed and `lib/products.ts` fallback catalog aligned.
 - Run the end-to-end flows and complete the production acceptance checklist in the PRD.
 
@@ -57,7 +58,7 @@ See `.env.example`. Server-only values (`SUPABASE_SERVICE_ROLE_KEY`, `MAILGUN_AP
 
 ## Exact Next Step
 
-Implement MOB-051 in `mobile/`: send the signed-in cart to `POST /api/checkout` with the bearer token, show an order confirmation, and render the shared order history. Before live mobile sign-in works, add `exp://**` (Expo Go) and `belmont://auth-callback` (dev/standalone) to Supabase Auth → URL Configuration → Redirect URLs. Mailgun is exempt for the mobile lesson and does not need setup for this work.
+Complete MOB-060 (cross-client acceptance and security checks) and MOB-061 (release handoff). First add `exp://**` (Expo Go) and `belmont://auth-callback` (dev/standalone) to Supabase Auth → URL Configuration → Redirect URLs, then run the two-client demonstration in `MOBILE_PLAN.md`: sign into one account on web and mobile, add a product on web and watch it sync to mobile, edit on mobile and watch web update, go offline and reconnect to confirm recovery, and place one order to confirm it appears in both order histories. Mailgun is exempt for the mobile lesson and does not need setup for this work.
 
 ## Mobile App (Expo)
 

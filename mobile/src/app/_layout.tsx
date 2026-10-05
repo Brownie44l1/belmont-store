@@ -18,6 +18,7 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" options={{ title: "Belmont Store" }} />
           <Stack.Screen name="cart" options={{ title: "Your basket" }} />
+          <Stack.Screen name="orders" options={{ title: "My orders" }} />
         </Stack>
       </CartProvider>
     </AuthProvider>
