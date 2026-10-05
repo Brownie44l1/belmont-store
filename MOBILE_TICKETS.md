@@ -43,11 +43,12 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-020: Configure native Supabase session persistence
 
-- **Status:** Not started
+- **Status:** Done (pending human redirect-allowlist step for live sign-in)
 - **Depends on:** MOB-010, MOB-002
 - **Work:** Install Supabase JS and AsyncStorage; configure persistent native auth, URL session handling, Google OAuth/deep linking, and sign-out.
 - **Acceptance:** Same Supabase user can sign into web and mobile; session survives restart; sign-out clears local session.
-- **Human step:** Enable native redirect URI in Supabase and test Google provider credentials.
+- **Human step:** Add `exp://**` (Expo Go) and `belmont://auth-callback` (dev/standalone build) to Supabase Auth → URL Configuration → Redirect URLs. The Google provider itself needs no change because the flow reuses the existing web OAuth client through Supabase.
+- **Validation:** Mobile typecheck, lint, and unit tests pass; Metro bundles with the Supabase client. Live Google sign-in requires the redirect allowlist above.
 
 ### MOB-021: Implement the mobile catalog
 
@@ -139,4 +140,4 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
 3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
-4. MOB-010 and MOB-011 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, and `expo start` serves it. Next is MOB-020 (native Supabase auth).
+4. MOB-010, MOB-011, and MOB-020 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, and it has persistent Supabase Google auth with sign-in/sign-out. Next is MOB-021 (mobile catalog).

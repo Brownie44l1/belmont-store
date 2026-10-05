@@ -45,6 +45,21 @@ server secrets such as the Supabase service-role key or Mailgun keys to `.env`.
 ## Structure
 
 - `src/app/` — Expo Router screens and layouts (routes only)
-- `src/lib/` — API config and fetch client (`config.ts`, `http.ts`, `api.ts`, `types.ts`)
+- `src/lib/` — API client and auth (`config.ts`, `http.ts`, `api.ts`, `types.ts`, `supabase.ts`, `auth.tsx`)
 - `src/lib/*.test.ts` — unit tests run by `npm test`
 - `app.json` — app config (name, slug, scheme, bundle identifiers, icons)
+
+## Authentication
+
+Google sign-in uses the web OAuth flow (`supabase.auth.signInWithOAuth` + `expo-web-browser`)
+with the PKCE flow, so it works in Expo Go and reuses the existing web Google provider — no
+native Google client ID or development build is required. The session persists in AsyncStorage
+and is refreshed while the app is active.
+
+Before sign-in works on device, add these to **Supabase Dashboard → Authentication → URL
+Configuration → Redirect URLs**:
+
+- `exp://**` — required for Expo Go (the exact host/port changes each session)
+- `belmont://auth-callback` — for development/standalone builds using the app scheme
+
+The Google provider needs no change; it keeps using the same web OAuth client.

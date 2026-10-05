@@ -29,6 +29,7 @@ The shop can be browsed with sample products before Supabase is configured. Goog
 - Web signed-in cart hydration/persistence with anonymous-cart merging and per-user local cart caches.
 - Expo SDK 57 mobile app in `mobile/` (TypeScript + Expo Router) with a minimal Belmont shell, identity placeholders (`Belmont`, `com.belmont.store`), public-only `.env.example`, ESLint, and separate lint/typecheck/build tooling.
 - Mobile API layer: `EXPO_PUBLIC_API_BASE_URL` config validation, a typed `fetch` client with optional bearer tokens and clear status/network errors, and a dependency-free test suite (`npm test`, Node's built-in runner).
+- Mobile Supabase auth: persistent AsyncStorage session, PKCE Google sign-in through `expo-web-browser` with `belmont://auth-callback` deep linking, an `AuthProvider`/`useAuth` context, and sign-in/sign-out UI on the home screen.
 
 ## Local Status (verified)
 
@@ -42,7 +43,7 @@ The app can be browsed now, but Google sign-in, saved orders, checkout, and emai
 
 ## Still Needed
 
-- Build the mobile foundation on top of the scaffold: native Supabase auth (MOB-020) and catalog (MOB-021).
+- Build the mobile foundation on top of the scaffold: catalog (MOB-021), then cart/checkout/orders (MOB-050/051).
 - Apply the updated `db/schema.sql` in Supabase, then smoke-test authenticated cart read/write and native bearer checkout.
 - Implement Supabase Realtime subscriptions in web and mobile, plus focus/reconnect recovery.
 - Implement the mobile auth, catalog, cart, checkout, and order history tickets in [MOBILE_TICKETS.md](./MOBILE_TICKETS.md).
@@ -58,7 +59,7 @@ See `.env.example`. Server-only values (`SUPABASE_SERVICE_ROLE_KEY`, `MAILGUN_AP
 
 ## Exact Next Step
 
-Implement MOB-020 in `mobile/`: install `@supabase/supabase-js` and AsyncStorage, configure a native Supabase client with persistent session storage and Google OAuth deep links (`belmont://`), add signed-in/signed-out UI and sign-out, and add the native redirect URI in the Supabase dashboard. Separately, apply the updated `db/schema.sql` in Supabase so the completed cart API can be exercised against the real database. Mailgun is exempt for the mobile lesson and does not need setup for this work.
+Implement MOB-021 in `mobile/`: fetch `GET /api/products` with the API client and render loading/error/empty states plus software/hardware browsing on the home screen. Before live mobile sign-in works, add `exp://**` (Expo Go) and `belmont://auth-callback` (dev/standalone) to Supabase Auth → URL Configuration → Redirect URLs. Separately, apply the updated `db/schema.sql` in Supabase so the completed cart API can be exercised against the real database. Mailgun is exempt for the mobile lesson and does not need setup for this work.
 
 ## Mobile App (Expo)
 
