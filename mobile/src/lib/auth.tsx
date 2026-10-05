@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // This exact URL must be allowed in Supabase → Authentication → URL
     // Configuration → Redirect URLs, or Supabase falls back to the Site URL.
-    console.info(`[auth] OAuth redirect URL: ${redirectTo}`);
+    console.log(`[auth] OAuth redirect URL: ${redirectTo}`);
 
     const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!data?.url) throw new Error("Could not start Google sign-in.");
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    console.info(`[auth] browser result: ${result.type}`);
+    console.log(`[auth] browser result: ${result.type}`);
     if (result.type !== "success") return;
 
     await completeSignInFromUrl(result.url);

@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CategoryFilter } from "@/components/category-filter";
 import { ProductCard } from "@/components/product-card";
-import { useAuth } from "@/lib/auth";
+import { getAuthRedirectUrl, useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 import type { CategoryFilter as CategoryFilterValue } from "@/lib/types";
 import { useProducts } from "@/lib/use-products";
@@ -125,6 +125,12 @@ export default function HomeScreen() {
               <Text style={styles.account}>Signed in as {user.email}</Text>
             ) : null}
 
+            {process.env.NODE_ENV !== "production" && !user && configured ? (
+              <Text style={styles.devHint}>
+                OAuth redirect (allowlist this): {getAuthRedirectUrl()}
+              </Text>
+            ) : null}
+
             {authError ? (
               <Pressable style={styles.errorBanner} onPress={clearError}>
                 <Text style={styles.errorText}>{authError}</Text>
@@ -229,6 +235,10 @@ const styles = StyleSheet.create({
   account: {
     color: "#cbd5f5",
     fontSize: 13,
+  },
+  devHint: {
+    color: "#f59e0b",
+    fontSize: 12,
   },
   authButton: {
     backgroundColor: "#1e293b",
