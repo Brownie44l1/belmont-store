@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,8 +15,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CategoryFilter } from "@/components/category-filter";
 import { ProductCard } from "@/components/product-card";
 import { useAuth } from "@/lib/auth";
+import { useCart } from "@/lib/cart";
 import type { CategoryFilter as CategoryFilterValue } from "@/lib/types";
-import { useCart } from "@/lib/use-cart";
 import { useProducts } from "@/lib/use-products";
 
 export default function HomeScreen() {
@@ -30,11 +31,9 @@ export default function HomeScreen() {
   } = useAuth();
   const { products, loading, refreshing, error, reload, refresh } =
     useProducts();
-  const { items: cartItems } = useCart();
+  const { count: cartCount, add } = useCart();
   const [category, setCategory] = useState<CategoryFilterValue>("all");
   const [busy, setBusy] = useState(false);
-
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const visibleProducts = useMemo(
     () =>
@@ -68,7 +67,9 @@ export default function HomeScreen() {
       <FlatList
         data={visibleProducts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ProductCard product={item} />}
+        renderItem={({ item }) => (
+          <ProductCard product={item} onAdd={() => add(item.id)} />
+        )}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={
@@ -86,17 +87,26 @@ export default function HomeScreen() {
                 <Text style={styles.brand}>BELMONT TECHNOLOGIES</Text>
                 <Text style={styles.title}>Belmont Store</Text>
               </View>
-              {configured ? (
-                <Pressable
-                  style={[styles.authButton, busy && styles.authButtonDisabled]}
-                  disabled={busy || initializing}
-                  onPress={onAuthPress}
-                >
-                  <Text style={styles.authButtonText}>
-                    {initializing ? "…" : user ? "Sign out" : "Sign in"}
-                  </Text>
-                </Pressable>
-              ) : null}
+              <View style={styles.topActions}>
+                <Link href="/cart" asChild>
+                  <Pressable style={styles.cartButton}>
+                    <Text style={styles.cartButtonText}>
+                      Basket{cartCount > 0 ? ` · ${cartCount}` : ""}
+                    </Text>
+                  </Pressable>
+                </Link>
+                {configured ? (
+                  <Pressable
+                    style={[styles.authButton, busy && styles.authButtonDisabled]}
+                    disabled={busy || initializing}
+                    onPress={onAuthPress}
+                  >
+                    <Text style={styles.authButtonText}>
+                      {initializing ? "…" : user ? "Sign out" : "Sign in"}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
             </View>
 
             {!configured ? (
@@ -105,10 +115,7 @@ export default function HomeScreen() {
                 mobile/.env to enable sign-in.
               </Text>
             ) : user ? (
-              <Text style={styles.account}>
-                Signed in as {user.email}
-                {cartCount > 0 ? `  ·  Basket ${cartCount}` : ""}
-              </Text>
+              <Text style={styles.account}>Signed in as {user.email}</Text>
             ) : null}
 
             {authError ? (
@@ -176,6 +183,24 @@ const styles = StyleSheet.create({
   },
   brandBlock: {
     flexShrink: 1,
+  },
+  topActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  cartButton: {
+    backgroundColor: "#0f172a",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  cartButtonText: {
+    color: "#e2e8f0",
+    fontSize: 13,
+    fontWeight: "600",
   },
   brand: {
     color: "#38bdf8",

@@ -107,10 +107,11 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-050: Implement mobile cart editing
 
-- **Status:** Not started
+- **Status:** Done
 - **Depends on:** MOB-021, MOB-032, MOB-041
 - **Work:** Add quantity editing/removal/clear and shared cart state to the mobile UI.
 - **Acceptance:** Signed-in edits persist and sync; anonymous edits remain local pending sign-in; quantity limits match API validation.
+- **Validation:** `CartProvider` (`src/lib/cart.tsx`) is shared app-wide; home cards add items and a `/cart` route edits quantity (capped 1–99), removes, and clears. Anonymous carts persist in AsyncStorage and merge into the server cart on sign-in; signed-in edits `PUT /api/cart` with the bearer token and sync via Realtime. Typecheck, lint, tests, bundle, and root lint/build pass.
 
 ### MOB-051: Implement mobile checkout and order history
 
@@ -142,4 +143,4 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
 3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
-4. MOB-010, MOB-011, MOB-020, MOB-021, and MOB-041 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, it has persistent Supabase Google auth, it loads the live product catalog with category filtering, and both clients subscribe to Realtime cart changes with launch/focus/reconnect recovery. Next is MOB-050 (mobile cart editing).
+4. MOB-010, MOB-011, MOB-020, MOB-021, MOB-041, and MOB-050 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, it has persistent Supabase Google auth, the live product catalog, cross-client Realtime cart sync, and a full cart screen with anonymous local carts. Next is MOB-051 (mobile checkout and order history).

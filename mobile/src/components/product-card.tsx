@@ -1,12 +1,27 @@
 import { Image } from "expo-image";
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  onAdd,
+}: {
+  product: Product;
+  onAdd?: () => void;
+}) {
+  const [added, setAdded] = useState(false);
   const categoryLabel =
     product.category === "software" ? "DIGITAL" : "HARDWARE";
+
+  function handleAdd() {
+    if (!onAdd) return;
+    onAdd();
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+  }
 
   return (
     <View style={styles.card}>
@@ -22,7 +37,21 @@ export function ProductCard({ product }: { product: Product }) {
         <Text style={styles.description} numberOfLines={2}>
           {product.description}
         </Text>
-        <Text style={styles.price}>{formatPrice(product.priceCents)}</Text>
+        <View style={styles.footer}>
+          <Text style={styles.price}>{formatPrice(product.priceCents)}</Text>
+          {onAdd ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Add ${product.name} to basket`}
+              onPress={handleAdd}
+              style={[styles.addButton, added && styles.addButtonAdded]}
+            >
+              <Text style={styles.addButtonText}>
+                {added ? "Added" : "Add"}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     </View>
   );
@@ -61,10 +90,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+    gap: 12,
+  },
   price: {
     color: "#e2e8f0",
     fontSize: 16,
     fontWeight: "700",
-    marginTop: 4,
+  },
+  addButton: {
+    backgroundColor: "#38bdf8",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  addButtonAdded: {
+    backgroundColor: "#22c55e",
+  },
+  addButtonText: {
+    color: "#0b1120",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

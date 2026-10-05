@@ -44,9 +44,9 @@ server secrets such as the Supabase service-role key or Mailgun keys to `.env`.
 
 ## Structure
 
-- `src/app/` — Expo Router screens and layouts (routes only)
+- `src/app/` — Expo Router screens and layouts (routes only; `index` catalog, `cart`)
 - `src/components/` — presentational components (`product-card`, `category-filter`)
-- `src/lib/` — API client, data hooks, and auth (`config.ts`, `http.ts`, `api.ts`, `types.ts`, `format.ts`, `use-products.ts`, `use-cart.ts`, `supabase.ts`, `auth.tsx`)
+- `src/lib/` — API client, data/auth/cart providers (`config.ts`, `http.ts`, `api.ts`, `types.ts`, `format.ts`, `use-products.ts`, `cart.tsx`, `supabase.ts`, `auth.tsx`)
 - `src/lib/*.test.ts` — unit tests run by `npm test`
 - `app.json` — app config (name, slug, scheme, bundle identifiers, icons)
 
