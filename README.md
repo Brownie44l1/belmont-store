@@ -47,8 +47,8 @@ The app can be browsed now, but Google sign-in, saved orders, checkout, and emai
 
 ## Still Needed
 
-- Finish mobile quality/release: run the cross-client acceptance and security checks (MOB-060) and write the release handoff (MOB-061).
-- Add `exp://**` and `belmont://auth-callback` to Supabase Auth → URL Configuration → Redirect URLs, then smoke-test live mobile Google sign-in, cart sync, and checkout on a device.
+- Build and install the mobile **preview APK** (EAS) so Google sign-in uses the app's `belmont://` scheme instead of Expo Go's `exp://` redirect, then run the cross-client acceptance checks (MOB-060) and write the release handoff (MOB-061).
+- Confirm `belmont://auth-callback` is in Supabase Auth → URL Configuration → Redirect URLs (already added), then smoke-test signed-in cart sync and checkout on the installed APK.
 - Replace demo catalog names, images, and NGN prices with Belmont’s approved products and currency. Keep the SQL seed and `lib/products.ts` fallback catalog aligned.
 - Run the end-to-end flows and complete the production acceptance checklist in the PRD.
 
@@ -58,7 +58,7 @@ See `.env.example`. Server-only values (`SUPABASE_SERVICE_ROLE_KEY`, `MAILGUN_AP
 
 ## Exact Next Step
 
-Complete MOB-060 (cross-client acceptance and security checks) and MOB-061 (release handoff). First add `exp://**` (Expo Go) and `belmont://auth-callback` (dev/standalone) to Supabase Auth → URL Configuration → Redirect URLs, then run the two-client demonstration in `MOBILE_PLAN.md`: sign into one account on web and mobile, add a product on web and watch it sync to mobile, edit on mobile and watch web update, go offline and reconnect to confirm recovery, and place one order to confirm it appears in both order histories. Mailgun is exempt for the mobile lesson and does not need setup for this work.
+Build the mobile APK and test sign-in on it: fill the Supabase values in `mobile/eas.json` (the `preview`/`production` `env` blocks), run `npx eas-cli@latest login`, `npx eas-cli@latest build:configure`, then `npx eas-cli@latest build --platform android --profile preview`, install the APK, and verify Google sign-in plus cart sync. This replaces the Expo Go OAuth path (`exp://`) with the app's own `belmont://auth-callback` scheme, which is already allowlisted in Supabase. Then complete MOB-060 (cross-client acceptance) and MOB-061 (release handoff). Mailgun is exempt for the mobile lesson.
 
 ## Mobile App (Expo)
 
@@ -71,4 +71,4 @@ cp .env.example .env   # fill in public values (never server secrets)
 ELECTRON_DISABLE_SANDBOX=1 npx expo start
 ```
 
-Open the QR code with **Expo Go** on a phone connected to the same network, or press `w` for the web preview. `ELECTRON_DISABLE_SANDBOX=1` avoids a harmless Linux `chrome-sandbox` error from Expo's React Native DevTools probe. On this host, the npm registry blackholes IPv4; prefix network commands with `NODE_OPTIONS=--dns-result-order=ipv6first` if installs or CLI calls hang. The default dev port 8081 is already taken on this machine — let Expo pick 8082 (or pass `--port`). See `mobile/README.md` for details.
+Open the QR code with **Expo Go** on a phone connected to the same network, or press `w` for the web preview. Expo Go is fine for browsing, but **Google sign-in requires installing the built APK** (the `belmont://` scheme); see `mobile/README.md` → "Building an APK". `ELECTRON_DISABLE_SANDBOX=1` avoids a harmless Linux `chrome-sandbox` error from Expo's React Native DevTools probe. On this host, the npm registry blackholes IPv4; prefix network commands with `NODE_OPTIONS=--dns-result-order=ipv6first` if installs or CLI calls hang. The default dev port 8081 is already taken on this machine — let Expo pick 8082 (or pass `--port`).

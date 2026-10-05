@@ -49,27 +49,47 @@ server secrets such as the Supabase service-role key or Mailgun keys to `.env`.
 - `src/lib/` — API client, data/auth/cart providers (`config.ts`, `http.ts`, `api.ts`, `types.ts`, `format.ts`, `use-products.ts`, `use-orders.ts`, `cart.tsx`, `supabase.ts`, `auth.tsx`)
 - `src/lib/*.test.ts` — unit tests run by `npm test`
 - `app.json` — app config (name, slug, scheme, bundle identifiers, icons)
+- `eas.json` — EAS Build profiles (`preview` produces the installable APK)
 
 ## Authentication
 
 Google sign-in uses the web OAuth flow (`supabase.auth.signInWithOAuth` + `expo-web-browser`)
-with the PKCE flow, so it works in Expo Go and reuses the existing web Google provider — no
-native Google client ID or development build is required. The session persists in AsyncStorage
-and is refreshed while the app is active.
+with the implicit flow, reusing the existing web Google provider. The session persists in
+AsyncStorage and is refreshed while the app is active.
 
-Before sign-in works on device, add these to **Supabase Dashboard → Authentication → URL
-Configuration → Redirect URLs**:
+**Use a real build (APK), not Expo Go, for sign-in.** In Expo Go the OAuth redirect is an
+`exp://<dev-server-ip>:<port>` deep link, which is tied to your laptop's IP and is handed
+back to Expo Go unreliably by Android's Chrome Custom Tab. A build registers the app's own
+`belmont://` scheme, so the redirect returns to the app reliably.
 
-- `exp://**` — required for Expo Go (the exact host/port changes each session)
-- `belmont://auth-callback` — for development/standalone builds using the app scheme
+In **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**, add:
+
+- `belmont://auth-callback` — required for builds (the app scheme in `app.json`)
+- `exp://**` — only needed if you also want to try Expo Go
 
 The Google provider needs no change; it keeps using the same web OAuth client.
 
-**If Google sign-in finishes but you stay in the browser on the web store**, Supabase rejected the mobile redirect and fell back to the Site URL, meaning the redirect URL is not allowlisted. The dev server logs the exact URL it asked for:
+## Building an APK (EAS)
 
-```
-[auth] OAuth redirect URL: exp://<your-lan-ip>:<port>/--/auth-callback
-```
+`eas.json` defines a `preview` profile that produces an installable **APK** (this is also the
+artifact to submit). You need an [Expo account](https://expo.dev/signup) for the cloud build.
 
-Add `exp://**` (Expo Go) or that exact URL to the Redirect URLs list. `belmont://auth-callback` only applies to development/standalone builds, not Expo Go.
+1. Fill the public environment values in `eas.json` (both `preview` and `production` `env`
+   blocks) from `mobile/.env`:
+   - `EXPO_PUBLIC_SUPABASE_URL`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+   These are public values that ship inside the app, not secrets.
+2. Log in and build:
+   ```bash
+   cd mobile
+   npx eas-cli@latest login
+   npx eas-cli@latest build:configure   # first time only; links the EAS project
+   npx eas-cli@latest build --platform android --profile preview
+   ```
+3. When the build finishes, EAS prints a URL to download the `.apk`. Install it on the phone
+   (enable "install unknown apps") and test Google sign-in.
+
+A *development* build (`expo-dev-client`) is optional and only speeds up JS iteration; a
+preview APK is enough to test and to submit.
+
 

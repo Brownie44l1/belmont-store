@@ -15,7 +15,7 @@ import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const authCallbackPath = "/";
+const authCallbackPath = "auth-callback";
 
 export function getAuthRedirectUrl(): string {
   return Linking.createURL(authCallbackPath);
