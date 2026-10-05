@@ -35,27 +35,35 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readErrorDescription(url: string): string | null {
-  const { queryParams } = Linking.parse(url);
-  const value = queryParams?.error_description;
-  return typeof value === "string" && value ? value : null;
-}
-
-function readCode(url: string): string | null {
-  const { queryParams } = Linking.parse(url);
-  const value = queryParams?.code;
-  return typeof value === "string" && value ? value : null;
+function readAuthParams(url: string): URLSearchParams {
+  const query = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+  const hash = url.includes("#") ? url.slice(url.indexOf("#") + 1) : "";
+  const params = new URLSearchParams(query.split("#")[0]);
+  new URLSearchParams(hash).forEach((value, key) => params.set(key, value));
+  return params;
 }
 
 async function completeSignInFromUrl(url: string): Promise<void> {
-  const errorDescription = readErrorDescription(url);
+  const params = readAuthParams(url);
+  const errorDescription = params.get("error_description");
   if (errorDescription) throw new Error(errorDescription);
 
-  const code = readCode(url);
-  if (!code) return;
+  const code = params.get("code");
+  if (code) {
+    const { error } = await getSupabase().auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    return;
+  }
 
-  const { error } = await getSupabase().auth.exchangeCodeForSession(code);
-  if (error) throw error;
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  if (accessToken && refreshToken) {
+    const { error } = await getSupabase().auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (error) throw error;
+  }
 }
 
 function toMessage(cause: unknown): string {
@@ -101,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const linking = Linking.addEventListener("url", ({ url }) => handleUrl(url));
     void Linking.getInitialURL().then((url) => {
+      console.log(`[auth] initial url: ${url ?? "none"}`);
       if (url) handleUrl(url);
     });
 
@@ -128,6 +137,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (oauthError) throw oauthError;
     if (!data?.url) throw new Error("Could not start Google sign-in.");
+
+    console.log(`[auth] authorize url: ${data.url}`);
+    setDebug(`redirect: ${redirectTo}\nauthorize: ${data.url}`);
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
     console.log(`[auth] browser result: ${result.type}`);
