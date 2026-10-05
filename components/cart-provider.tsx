@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
 export type CartEntry = { productId: string; quantity: number };
@@ -29,6 +30,8 @@ let cachedRaw: string | null = null;
 let cachedCart: CartEntry[] = emptyCart;
 let currentUserId: string | null = null;
 let pendingWrite = Promise.resolve();
+let cartChannel: RealtimeChannel | null = null;
+let cartChannelClient: ReturnType<typeof createClient> | null = null;
 
 function getStorageKey(userId = currentUserId) {
   return userId ? `belmont-cart-user:${userId}` : anonymousCartStorageKey;
@@ -117,14 +120,65 @@ function mergeCarts(...carts: CartEntry[][]): CartEntry[] {
   }));
 }
 
-async function activateUser(userId: string | null) {
+async function refreshFromServer(userId: string) {
+  try {
+    const response = await fetch("/api/cart");
+    if (!response.ok || currentUserId !== userId) return;
+    const serverCart = (await response.json()) as unknown;
+    if (!Array.isArray(serverCart)) return;
+    writeCart(serverCart.filter(isCartEntry), false);
+  } catch {
+    // The next Realtime event or foreground refresh will retry.
+  }
+}
+
+function stopCartSubscription() {
+  if (cartChannel && cartChannelClient) {
+    void cartChannelClient.removeChannel(cartChannel);
+  }
+  cartChannel = null;
+  cartChannelClient = null;
+}
+
+function subscribeToServerCart(
+  supabase: ReturnType<typeof createClient>,
+  userId: string
+) {
+  stopCartSubscription();
+  cartChannelClient = supabase;
+  cartChannel = supabase
+    .channel(`cart-changes-${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "cart_items",
+        filter: `user_id=eq.${userId}`,
+      },
+      () => {
+        void refreshFromServer(userId);
+      }
+    )
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") void refreshFromServer(userId);
+    });
+}
+
+async function activateUser(
+  userId: string | null,
+  supabase: ReturnType<typeof createClient>
+) {
   if (userId === currentUserId) return;
 
   const anonymousCart = userId && !currentUserId ? getSnapshot() : emptyCart;
   currentUserId = userId;
   cachedRaw = null;
   listeners.forEach((listener) => listener());
-  if (!userId) return;
+  if (!userId) {
+    stopCartSubscription();
+    return;
+  }
 
   try {
     const response = await fetch("/api/cart");
@@ -142,6 +196,8 @@ async function activateUser(userId: string | null) {
     window.localStorage.removeItem(anonymousCartStorageKey);
   } catch {
     // The per-user cache remains usable until the API can be reached.
+  } finally {
+    if (currentUserId === userId) subscribeToServerCart(supabase, userId);
   }
 }
 
@@ -159,14 +215,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       queueMicrotask(() => {
-        void activateUser(session?.user.id ?? null);
+        void activateUser(session?.user.id ?? null, supabase);
       });
     });
     void supabase.auth.getUser().then(({ data: userData }) => {
-      void activateUser(userData.user?.id ?? null);
+      void activateUser(userData.user?.id ?? null, supabase);
     });
 
-    return () => data.subscription.unsubscribe();
+    function refreshIfSignedIn() {
+      if (currentUserId) void refreshFromServer(currentUserId);
+    }
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") refreshIfSignedIn();
+    }
+    window.addEventListener("focus", refreshIfSignedIn);
+    window.addEventListener("online", refreshIfSignedIn);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      data.subscription.unsubscribe();
+      window.removeEventListener("focus", refreshIfSignedIn);
+      window.removeEventListener("online", refreshIfSignedIn);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      stopCartSubscription();
+    };
   }, []);
 
   function add(productId: string) {

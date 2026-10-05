@@ -15,6 +15,7 @@ import { CategoryFilter } from "@/components/category-filter";
 import { ProductCard } from "@/components/product-card";
 import { useAuth } from "@/lib/auth";
 import type { CategoryFilter as CategoryFilterValue } from "@/lib/types";
+import { useCart } from "@/lib/use-cart";
 import { useProducts } from "@/lib/use-products";
 
 export default function HomeScreen() {
@@ -29,8 +30,11 @@ export default function HomeScreen() {
   } = useAuth();
   const { products, loading, refreshing, error, reload, refresh } =
     useProducts();
+  const { items: cartItems } = useCart();
   const [category, setCategory] = useState<CategoryFilterValue>("all");
   const [busy, setBusy] = useState(false);
+
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const visibleProducts = useMemo(
     () =>
@@ -101,7 +105,10 @@ export default function HomeScreen() {
                 mobile/.env to enable sign-in.
               </Text>
             ) : user ? (
-              <Text style={styles.account}>Signed in as {user.email}</Text>
+              <Text style={styles.account}>
+                Signed in as {user.email}
+                {cartCount > 0 ? `  ·  Basket ${cartCount}` : ""}
+              </Text>
             ) : null}
 
             {authError ? (

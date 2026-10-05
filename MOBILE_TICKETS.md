@@ -96,11 +96,12 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-041: Add Realtime notifications and recovery fetches
 
-- **Status:** Not started
+- **Status:** Done
 - **Depends on:** MOB-030, MOB-040
 - **Work:** Subscribe to the current user's cart changes in both apps; refetch on launch, focus, and reconnect; unsubscribe on sign-out/unmount.
 - **Acceptance:** Mutations appear in the other active client; disconnect/reconnect converges to database state; no cross-user events leak.
-- **Validation:** Two-client manual synchronization script in `MOBILE_PLAN.md`.
+- **Validation:** Web `CartProvider` subscribes to `cart_items` for the signed-in user (filtered by `user_id`) and refetches on events, `SUBSCRIBED` (reconnect), window focus/visibility/online. Mobile `useCart` does the same with bearer-auth `GET /api/cart`, refetching on Realtime events, `SUBSCRIBED`, and AppState `active`, and unsubscribes on sign-out. Both typecheck, lint, test, and bundle; root lint/build pass.
+- **Note:** The visible cross-client add/update/remove demonstration lands with the mobile cart UI in MOB-050; the sync layer is in place now.
 
 ## Epic MOB-E5: Mobile cart, checkout, and orders
 
@@ -141,4 +142,4 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
 3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
-4. MOB-010, MOB-011, MOB-020, and MOB-021 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, it has persistent Supabase Google auth, and it loads the live product catalog with category filtering. Next is MOB-041 (Realtime cart sync), then MOB-050 (mobile cart editing).
+4. MOB-010, MOB-011, MOB-020, MOB-021, and MOB-041 are complete: the Expo app lives in `mobile/`, installs, typechecks, lints, tests, bundles for Android via Metro, `expo start` serves it, it has persistent Supabase Google auth, it loads the live product catalog with category filtering, and both clients subscribe to Realtime cart changes with launch/focus/reconnect recovery. Next is MOB-050 (mobile cart editing).
