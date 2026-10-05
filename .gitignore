@@ -34,6 +34,12 @@ yarn-error.log*
 .env*
 !.env.example
 
+# expo mobile app
+/mobile/node_modules
+/mobile/.expo
+/mobile/dist
+/mobile/web-build
+
 # vercel
 .vercel
 

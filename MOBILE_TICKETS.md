@@ -24,11 +24,12 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 
 ### MOB-010: Scaffold the Expo TypeScript app
 
-- **Status:** Blocked: npm registry did not respond; no `mobile/` files were created
-- **Depends on:** MOB-002 decisions
-- **Work:** Create `mobile/` using Expo, TypeScript, and Expo Router; add app scripts, minimal navigation, `.env.example`, and setup notes.
+- **Status:** Done
+- **Depends on:** MOB-002 decisions (using placeholders: name `Belmont`, `com.belmont.store`)
+- **Work:** Create `mobile/` using Expo SDK 57, TypeScript, and Expo Router; add app scripts, minimal navigation, `.env.example`, and setup notes.
 - **Acceptance:** `npm install` and Expo start work from `mobile/`; app opens on a simulator/device; root web install/build remain unaffected.
-- **Validation:** Mobile typecheck and launch; root lint/build.
+- **Validation:** Mobile typecheck and lint pass; `expo export --platform android` bundles (1240 modules); `expo start` serves the dev server; root lint/build pass.
+- **Note:** This host blackholes IPv4 to the npm registry. Install/CLI network calls need `NODE_OPTIONS=--dns-result-order=ipv6first`.
 
 ### MOB-011: Add mobile configuration and API client
 
@@ -138,4 +139,4 @@ The delivery sequence is dependency-driven. Each ticket should be implemented, v
 1. MOB-001 is documented and complete.
 2. MOB-002 needs the human-owned app identity and Supabase/Google access before final configuration, but implementation can proceed using clearly named placeholders.
 3. MOB-030, MOB-031, MOB-032, and MOB-040 are implemented and committed. The Supabase schema still needs to be applied before a live API smoke test.
-4. MOB-010 was attempted, but both `create-expo-app` and a direct npm registry check stalled. Retry MOB-010 when npm registry access is available; no partial mobile scaffold was retained.
+4. MOB-010 is complete: the Expo app lives in `mobile/`, installs, typechecks, lints, bundles for Android via Metro, and `expo start` serves it. MOB-011 (config/API client) is next.

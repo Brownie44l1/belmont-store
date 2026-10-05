@@ -27,6 +27,7 @@ The shop can be browsed with sample products before Supabase is configured. Goog
 - Shared mobile delivery plan and ticket backlog in [MOBILE_PLAN.md](./MOBILE_PLAN.md) and [MOBILE_TICKETS.md](./MOBILE_TICKETS.md).
 - Authenticated cart persistence API (`GET/PUT /api/cart`) and database cart schema with owner-scoped RLS; checkout now accepts web cookie sessions or verified Supabase bearer tokens.
 - Web signed-in cart hydration/persistence with anonymous-cart merging and per-user local cart caches.
+- Expo SDK 57 mobile app in `mobile/` (TypeScript + Expo Router) with a minimal Belmont shell, identity placeholders (`Belmont`, `com.belmont.store`), public-only `.env.example`, ESLint, and separate lint/typecheck/build tooling.
 
 ## Local Status (verified)
 
@@ -40,7 +41,7 @@ The app can be browsed now, but Google sign-in, saved orders, checkout, and emai
 
 ## Still Needed
 
-- Retry Expo scaffold after npm registry access is restored. The scaffold command stalled before creating `mobile/`.
+- Build the mobile foundation on top of the scaffold: typed API client and config (MOB-011), native Supabase auth (MOB-020), and catalog (MOB-021).
 - Apply the updated `db/schema.sql` in Supabase, then smoke-test authenticated cart read/write and native bearer checkout.
 - Implement Supabase Realtime subscriptions in web and mobile, plus focus/reconnect recovery.
 - Implement the mobile auth, catalog, cart, checkout, and order history tickets in [MOBILE_TICKETS.md](./MOBILE_TICKETS.md).
@@ -56,4 +57,17 @@ See `.env.example`. Server-only values (`SUPABASE_SERVICE_ROLE_KEY`, `MAILGUN_AP
 
 ## Exact Next Step
 
-Restore/check npm registry connectivity and rerun `npx create-expo-app@latest mobile --template blank-typescript` for ticket MOB-010. Separately, apply the updated `db/schema.sql` in Supabase so the completed cart API can be exercised against the real database. Mailgun is exempt for the mobile lesson and does not need setup for this work.
+Implement MOB-011 in `mobile/`: add a typed API client that reads `EXPO_PUBLIC_API_BASE_URL` (default `https://belmont-store.vercel.app`), supports public requests and optional bearer tokens, and surfaces clear network/API errors. Separately, apply the updated `db/schema.sql` in Supabase so the completed cart API can be exercised against the real database. Mailgun is exempt for the mobile lesson and does not need setup for this work.
+
+## Mobile App (Expo)
+
+The native app lives in `mobile/` and shares the deployed API and Supabase project. To run it:
+
+```bash
+cd mobile
+npm install
+cp .env.example .env   # fill in public values (never server secrets)
+npx expo start
+```
+
+Open the QR code with **Expo Go** on a phone connected to the same network, or press `w` for the web preview. On this host, the npm registry blackholes IPv4; prefix network commands with `NODE_OPTIONS=--dns-result-order=ipv6first` if installs or CLI calls hang. See `mobile/README.md` for details.
