@@ -46,3 +46,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Android package artifacts and signing material (never commit signing keys)
+*.keystore
+*.jks
+signing-key-info.txt
+Belmont*.zip
+Belmont*.apk
+Belmont*.aab
