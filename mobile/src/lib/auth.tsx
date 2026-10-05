@@ -27,6 +27,7 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   error: string | null;
+  debug: string | null;
   clearError: () => void;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(isSupabaseConfigured);
   const [error, setError] = useState<string | null>(null);
+  const [debug, setDebug] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     const handleUrl = (url: string) => {
+      setDebug(`deep link received: ${url}`);
       void completeSignInFromUrl(url).catch((cause: unknown) => {
         setError(toMessage(cause));
       });
@@ -117,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // This exact URL must be allowed in Supabase → Authentication → URL
     // Configuration → Redirect URLs, or Supabase falls back to the Site URL.
     console.log(`[auth] OAuth redirect URL: ${redirectTo}`);
+    setDebug(`redirect: ${redirectTo}`);
 
     const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -127,6 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
     console.log(`[auth] browser result: ${result.type}`);
+    setDebug(
+      `redirect: ${redirectTo}\nresult: ${result.type}` +
+        (result.type === "success" ? `\nurl: ${result.url}` : "")
+    );
     if (result.type !== "success") return;
 
     await completeSignInFromUrl(result.url);
@@ -143,11 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       error,
+      debug,
       clearError,
       signInWithGoogle,
       signOut,
     }),
-    [initializing, session, error, clearError, signInWithGoogle, signOut]
+    [initializing, session, error, debug, clearError, signInWithGoogle, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

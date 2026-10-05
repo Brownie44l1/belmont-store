@@ -25,6 +25,7 @@ export default function HomeScreen() {
     initializing,
     user,
     error: authError,
+    debug: authDebug,
     clearError,
     signInWithGoogle,
     signOut,
@@ -127,7 +128,8 @@ export default function HomeScreen() {
 
             {process.env.NODE_ENV !== "production" && !user && configured ? (
               <Text style={styles.devHint}>
-                OAuth redirect (allowlist this): {getAuthRedirectUrl()}
+                OAuth redirect (allowlist this):{" "}
+                {authDebug ?? getAuthRedirectUrl()}
               </Text>
             ) : null}
 
